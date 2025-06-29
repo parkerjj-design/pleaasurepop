@@ -1,25 +1,30 @@
 const express = require("express");
-const multer = require("multer");
 const router = express.Router();
+const multer = require("multer");
 const Product = require("../models/Product");
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// ✅ Configure Cloudinary
+// ✅ Load env and verify
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_KEY,
   api_secret: process.env.CLOUD_SECRET,
 });
 
-// ✅ Cloudinary Storage Setup
+console.log("📡 Cloudinary configured with cloud name:", process.env.CLOUD_NAME);
+
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: {
-    folder: "pleasurepop",
-    allowed_formats: ["jpg", "png", "jpeg"],
+  params: async (req, file) => {
+    console.log("📂 Accessing Cloudinary folder: pleasurepop");
+    return {
+      folder: "pleasurepop",
+      allowed_formats: ["jpg", "png", "jpeg"],
+    };
   },
 });
+
 const upload = multer({ storage });
 
 // 🔍 GET all products
@@ -32,13 +37,20 @@ router.get("/", async (req, res) => {
   }
 });
 
-// 🆕 POST new product with Cloudinary image
+// 🆕 POST new product
 router.post("/", upload.single("image"), async (req, res) => {
+  console.log("🔥 HITTING Cloudinary POST route");
+
   try {
     const { name, price, rating, tags, description, category } = req.body;
-    const imagePath = req.file ? req.file.path : "";
 
-    console.log("✅ Uploaded to Cloudinary:", imagePath);
+    if (!req.file || !req.file.path.includes("cloudinary.com")) {
+      console.error("❌ Image not hosted on Cloudinary:", req.file?.path);
+      return res.status(400).json({ message: "Image upload failed or invalid path." });
+    }
+
+    const imagePath = req.file.path;
+    console.log("📸 Uploaded to Cloudinary:", imagePath);
 
     const product = new Product({
       name,
@@ -58,10 +70,12 @@ router.post("/", upload.single("image"), async (req, res) => {
   }
 });
 
-// 🔄 UPDATE a product
+// 🔄 UPDATE product
 router.put("/:id", upload.single("image"), async (req, res) => {
+  console.log("🛠️ Updating product:", req.params.id);
   try {
     const { name, price, rating, tags, description, category } = req.body;
+
     const updateFields = {
       name,
       price,
@@ -71,9 +85,9 @@ router.put("/:id", upload.single("image"), async (req, res) => {
       category,
     };
 
-    if (req.file) {
+    if (req.file && req.file.path.includes("cloudinary.com")) {
       updateFields.image = req.file.path;
-      console.log("✅ Updated image on Cloudinary:", req.file.path);
+      console.log("✅ Updated image path:", req.file.path);
     }
 
     const updated = await Product.findByIdAndUpdate(req.params.id, updateFields, { new: true });

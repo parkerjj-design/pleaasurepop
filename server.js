@@ -7,6 +7,9 @@ const userAuthRoutes = require('./routes/userAuth');
 const orderRoutes = require('./routes/order');
 const path = require("path");
 
+console.log("📁 Running server from:", __dirname);
+
+
 dotenv.config(); // Load .env variables
 
 const app = express();
