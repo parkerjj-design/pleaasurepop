@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require('../models/Order');
 const verifyToken = require('../middleware/authMiddleware');
 
+// Create a new order
 router.post('/', verifyToken, async (req, res) => {
   try {
     const { items, shippingAddress, shippingMethod, shippingFee, totalAmount, paymentMethod } = req.body;
@@ -22,12 +23,11 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-
-// GET all orders for admin view
-router.get('/', verifyToken, async (req, res) => {
+// ✅ GET all orders
+router.get('/', async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("user", "name email") // optional if you want user details
+      .populate("user", "name email")
       .sort({ createdAt: -1 });
 
     res.json(orders);
@@ -35,8 +35,9 @@ router.get('/', verifyToken, async (req, res) => {
     console.error("Error fetching orders:", err);
     res.status(500).json({ message: "Failed to fetch orders" });
   }
+});
 
-// Update order status (e.g., to Delivered)
+// ✅ Update order status
 router.put('/:id/status', async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -50,7 +51,5 @@ router.put('/:id/status', async (req, res) => {
     res.status(500).json({ message: "Failed to update order status", error: err.message });
   }
 });
-});
-
 
 module.exports = router;
