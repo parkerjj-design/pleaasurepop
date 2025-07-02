@@ -10,7 +10,9 @@ const orderSchema = new mongoose.Schema({
       price: Number
     }
   ],
-  shippingAddress: String,
+  shippingAddress: String,               // free-form from textarea
+  shippingMethod: String,                // from dropdown
+  shippingFee: Number,                   // from dropdown
   totalAmount: Number,
   status: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now }

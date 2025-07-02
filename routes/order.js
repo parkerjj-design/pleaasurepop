@@ -5,12 +5,15 @@ const verifyToken = require('../middleware/authMiddleware');
 
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { items, shippingAddress, totalAmount } = req.body;
+    const { items, shippingAddress, shippingMethod, shippingFee, totalAmount, paymentMethod } = req.body;
     const newOrder = new Order({
       user: req.user.id,
       items,
       shippingAddress,
-      totalAmount
+      shippingMethod,
+      shippingFee,
+      totalAmount,
+      paymentMethod
     });
     const saved = await newOrder.save();
     res.status(201).json(saved);
@@ -21,7 +24,7 @@ router.post('/', verifyToken, async (req, res) => {
 
 
 // GET all orders for admin view
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, async (req, res) => {
   try {
     const orders = await Order.find()
       .populate("user", "name email") // optional if you want user details
